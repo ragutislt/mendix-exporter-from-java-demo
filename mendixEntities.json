@@ -1,0 +1,42 @@
+[ {
+  "name" : "Cat",
+  "attributes" : [ {
+    "name" : "id",
+    "type" : "AUTO_NUMBER",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "name",
+    "type" : "STRING",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "age",
+    "type" : "INTEGER",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "color",
+    "type" : "STRING",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "humanPuppet",
+    "type" : "ENTITY",
+    "associationType" : "ONE_TO_ONE",
+    "entityType" : "Human"
+  } ]
+}, {
+  "name" : "Human",
+  "attributes" : [ {
+    "name" : "id",
+    "type" : "AUTO_NUMBER",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "name",
+    "type" : "STRING",
+    "associationType" : null,
+    "entityType" : ""
+  } ]
+} ]

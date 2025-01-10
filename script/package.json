@@ -1,0 +1,17 @@
+{
+  "name": "script",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "build": "tsc",
+    "tsc": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "mendixmodelsdk": "^4.94.0",
+    "mendixplatformsdk": "^5.1.3"
+  }
+}
