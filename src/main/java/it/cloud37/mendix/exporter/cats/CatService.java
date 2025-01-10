@@ -1,10 +1,10 @@
-package it.cloud37.java_to_mendix.cats;
+package it.cloud37.mendix.exporter.cats;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import it.cloud37.java_to_mendix.humans.HumanDto;
+import it.cloud37.mendix.exporter.humans.HumanDto;
 
 @Service
 public class CatService {

@@ -1,10 +1,11 @@
-package it.cloud37.java_to_mendix;
+package it.cloud37.mendix.exporter;
 
 import java.io.IOException;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import it.cloud37.java_to_mendix.mendixModel.MendixExporter;
+
+import it.cloud37.mendix.exporter.export.MendixExporter;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication

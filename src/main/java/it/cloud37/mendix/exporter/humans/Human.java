@@ -1,4 +1,4 @@
-package it.cloud37.java_to_mendix.humans;
+package it.cloud37.mendix.exporter.humans;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,15 +7,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="HUMAN")
+@Table(name = "HUMAN")
 public class Human {
-   @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id; 
+    private Long id;
 
     private String name;
 
-    protected Human() {}
+    protected Human() {
+    }
 
     public Human(Long id, String name) {
         this.id = id;
@@ -25,7 +26,7 @@ public class Human {
     public Long getId() {
         return id;
     }
-    
+
     public String getName() {
         return name;
     }

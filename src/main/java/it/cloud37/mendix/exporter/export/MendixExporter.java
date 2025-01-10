@@ -1,4 +1,4 @@
-package it.cloud37.java_to_mendix.mendixModel;
+package it.cloud37.mendix.exporter.export;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -15,9 +15,9 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import it.cloud37.java_to_mendix.JavaToMendixApplication;
-import it.cloud37.java_to_mendix.mendixModel.MendixAttribute.AssociationType;
-import it.cloud37.java_to_mendix.mendixModel.MendixAttribute.AttributeType;
+import it.cloud37.mendix.exporter.JavaToMendixApplication;
+import it.cloud37.mendix.exporter.export.MendixAttribute.AssociationType;
+import it.cloud37.mendix.exporter.export.MendixAttribute.AttributeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.extern.slf4j.Slf4j;

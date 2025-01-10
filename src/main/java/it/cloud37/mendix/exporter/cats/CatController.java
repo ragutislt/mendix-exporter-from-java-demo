@@ -1,4 +1,4 @@
-package it.cloud37.java_to_mendix.cats;
+package it.cloud37.mendix.exporter.cats;
 
 import java.util.List;
 

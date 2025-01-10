@@ -1,4 +1,4 @@
-package it.cloud37.java_to_mendix.mendixModel;
+package it.cloud37.mendix.exporter.export;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package it.cloud37.java_to_mendix;
+package it.cloud37.mendix.exporter;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;

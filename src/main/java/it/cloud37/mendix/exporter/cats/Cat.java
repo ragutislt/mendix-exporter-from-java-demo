@@ -1,6 +1,6 @@
-package it.cloud37.java_to_mendix.cats;
+package it.cloud37.mendix.exporter.cats;
 
-import it.cloud37.java_to_mendix.humans.Human;
+import it.cloud37.mendix.exporter.humans.Human;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,7 +15,8 @@ class Cat {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    protected Cat() {}
+    protected Cat() {
+    }
 
     public Cat(String name, int age, String color, Human humanPuppet) {
         this.name = name;
@@ -35,7 +36,7 @@ class Cat {
     public Long getId() {
         return id;
     }
-    
+
     public String getName() {
         return name;
     }
