@@ -146,6 +146,14 @@ function createMendixRestServices(module, restServicesJson) {
                 const publishedRestOperation = mendixmodelsdk_1.rest.PublishedRestServiceOperation.createIn(publishedRestResource);
                 publishedRestOperation.path = op.path;
                 publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+                const microflow = mendixmodelsdk_1.microflows.Microflow.createIn(module);
+                microflow.name = `PRS_${importedResource.name}_${op.restOperation}`;
+                const startEvent = mendixmodelsdk_1.microflows.StartEvent.createIn(microflow.objectCollection);
+                const endEvent = mendixmodelsdk_1.microflows.EndEvent.createIn(microflow.objectCollection);
+                const startEndConnector = mendixmodelsdk_1.microflows.SequenceFlow.createIn(microflow);
+                startEndConnector.origin = startEvent;
+                startEndConnector.destination = endEvent;
+                publishedRestOperation.microflow = microflow;
             });
         });
     });

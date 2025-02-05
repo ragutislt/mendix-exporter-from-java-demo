@@ -1,4 +1,4 @@
-import { domainmodels, IModel, rest, projects, services } from "mendixmodelsdk";
+import { domainmodels, IModel, rest, projects, services, microflows } from "mendixmodelsdk";
 import { MendixPlatformClient, OnlineWorkingCopy } from "mendixplatformsdk";
 import * as fs from 'fs';
 
@@ -167,6 +167,14 @@ function createMendixRestServices(module: projects.IModule, restServicesJson: st
                 const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
                 publishedRestOperation.path = op.path;
                 publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+                const microflow = microflows.Microflow.createIn(module);
+                microflow.name = `PRS_${importedResource.name}_${op.restOperation}`;
+                const startEvent = microflows.StartEvent.createIn(microflow.objectCollection);
+                const endEvent = microflows.EndEvent.createIn(microflow.objectCollection);
+                const startEndConnector = microflows.SequenceFlow.createIn(microflow);
+                startEndConnector.origin = startEvent;
+                startEndConnector.destination = endEvent;
+                publishedRestOperation.microflow = microflow;
             });
         });
     });
