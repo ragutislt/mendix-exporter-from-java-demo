@@ -1,17 +1,4 @@
 [ {
-  "name" : "Human",
-  "attributes" : [ {
-    "name" : "id",
-    "type" : "AUTO_NUMBER",
-    "associationType" : null,
-    "entityType" : ""
-  }, {
-    "name" : "name",
-    "type" : "STRING",
-    "associationType" : null,
-    "entityType" : ""
-  } ]
-}, {
   "name" : "Cat",
   "attributes" : [ {
     "name" : "id",
@@ -38,5 +25,18 @@
     "type" : "ENTITY",
     "associationType" : "ONE_TO_ONE",
     "entityType" : "Human"
+  } ]
+}, {
+  "name" : "Human",
+  "attributes" : [ {
+    "name" : "id",
+    "type" : "AUTO_NUMBER",
+    "associationType" : null,
+    "entityType" : ""
+  }, {
+    "name" : "name",
+    "type" : "STRING",
+    "associationType" : null,
+    "entityType" : ""
   } ]
 } ]

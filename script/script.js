@@ -51,27 +51,33 @@ var ImportedAttributeType;
     ImportedAttributeType["ENUM"] = "ENUM";
     ImportedAttributeType["ENTITY"] = "ENTITY";
 })(ImportedAttributeType || (ImportedAttributeType = {}));
-async function main(dbEntitiesFile, appId) {
+async function main(dbEntitiesFile, restServicesFile, appId) {
     const client = new mendixplatformsdk_1.MendixPlatformClient();
     const app = await client.getApp(appId);
     const workingCopy = await app.createTemporaryWorkingCopy("main");
     const model = await workingCopy.openModel();
     const domainModelInterface = model.allDomainModels().filter(dm => dm.containerAsModule.name === "MyFirstModule")[0];
     const domainModel = await domainModelInterface.load();
+    const module = model.allModules().filter(m => m.name === "MyFirstModule")[0];
+    //const module = model.allFolderBases().filter(b => b.name === "MyFirstModule");
+    //model.allFolderBases()
     const dbEntitiesJson = fs.readFileSync(dbEntitiesFile, 'utf-8');
+    const restServicesJson = fs.readFileSync(restServicesFile, 'utf-8');
     createMendixEntities(domainModel, dbEntitiesJson);
+    createMendixRestServices(module, restServicesJson);
     await commitChanges(model, workingCopy, dbEntitiesFile);
 }
 function createMendixEntities(domainModel, entitiesInJson) {
     const importedEntities = JSON.parse(entitiesInJson);
-    importedEntities.forEach((importedEntity, i) => {
+    const entitiesToCreate = importedEntities.filter(e => !entityAlreadyExists(e, domainModel));
+    entitiesToCreate.forEach((importedEntity, i) => {
         console.info(`Hello from ${importedEntity.name}`);
         const mendixEntity = mendixmodelsdk_1.domainmodels.Entity.createIn(domainModel);
         mendixEntity.name = importedEntity.name;
         mendixEntity.location = { x: 100 + i * 300, y: 50 };
         processAttributes(importedEntity, mendixEntity);
     });
-    importedEntities.forEach(importedEntity => {
+    entitiesToCreate.forEach(importedEntity => {
         const mendixParentEntity = domainModel.entities.find(e => e.name === importedEntity.name);
         processAssociations(importedEntity, domainModel, mendixParentEntity);
     });
@@ -96,6 +102,9 @@ function processAttributes(importedEntity, mendixEntity) {
         mendixAttribute.name = capitalize(getAttributeName(a.name, importedEntity));
         mendixAttribute.type = assignAttributeType(a.type, mendixAttribute);
     });
+}
+function entityAlreadyExists(importedEntity, domainModel) {
+    return domainModel.entities.find(e => e.name === importedEntity.name);
 }
 function getAttributeName(importedAttributeName, mendixEntity) {
     return importedAttributeName === "id" ? `${mendixEntity.name}Id` : importedAttributeName;
@@ -123,8 +132,41 @@ function assignAttributeType(type, attribute) {
             throw new Error(`attribute ${attribute.name} did not have a valid mendix type defined`);
     }
 }
+function createMendixRestServices(module, restServicesJson) {
+    const importedServices = JSON.parse(restServicesJson);
+    importedServices.forEach(importedService => {
+        console.info(`Hello from ${importedService.serviceName}`);
+        const restService = mendixmodelsdk_1.rest.PublishedRestService.createIn(module);
+        restService.serviceName = importedService.serviceName;
+        restService.path = importedService.path;
+        restService.version = importedService.version;
+        restService.name = importedService.serviceName;
+        // importedService.resources.forEach(importedResource => {
+        //     const publishedRestResource = rest.PublishedRestServiceResource.createIn(restService);
+        //     importedResource.operations.forEach(op => {
+        //         const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
+        //         publishedRestOperation.path = op.path;
+        //         publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+        //     });
+        // });
+    });
+}
+function getMendixHttpMethod(importedOperationMethod) {
+    switch (importedOperationMethod) {
+        case "GET":
+            return mendixmodelsdk_1.services.HttpMethod.Get;
+        case "POST":
+            return mendixmodelsdk_1.services.HttpMethod.Post;
+        case "PUT":
+            return mendixmodelsdk_1.services.HttpMethod.Put;
+        case "DELETE":
+            return mendixmodelsdk_1.services.HttpMethod.Delete;
+        default:
+            throw new Error(`imported http method ${importedOperationMethod} did not have a valid method in mendix defined`);
+    }
+}
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
-main(process.argv[2], process.argv[3]).catch(console.error);
+main(process.argv[2], process.argv[3], process.argv[4]).catch(console.error);
 //# sourceMappingURL=script.js.map

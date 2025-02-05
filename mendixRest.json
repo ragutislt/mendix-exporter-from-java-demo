@@ -1,0 +1,12 @@
+[ {
+  "serviceName" : "JavaToMendixApplication",
+  "path" : "api",
+  "version" : "1",
+  "resources" : [ {
+    "name" : "CatController",
+    "operations" : [ {
+      "path" : "/cat",
+      "restOperation" : "GET"
+    } ]
+  } ]
+} ]

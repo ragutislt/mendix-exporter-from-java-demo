@@ -1,4 +1,4 @@
-import { domainmodels, IModel } from "mendixmodelsdk";
+import { domainmodels, IModel, rest, projects, services } from "mendixmodelsdk";
 import { MendixPlatformClient, OnlineWorkingCopy } from "mendixplatformsdk";
 import * as fs from 'fs';
 
@@ -30,7 +30,24 @@ enum ImportedAttributeType {
     ENTITY = "ENTITY"
 }
 
-async function main(dbEntitiesFile: string, appId: string) {
+interface ImportedRestService {
+    serviceName: string;
+    path: string;
+    version: string;
+    resources: ImportedRestResource[];
+}
+
+interface ImportedRestResource {
+    name: string;
+    operations: ImportedRestOperation[];
+}
+
+interface ImportedRestOperation {
+    path: string;
+    restOperation: string;
+}
+
+async function main(dbEntitiesFile: string, restServicesFile: string, appId: string) {
     const client = new MendixPlatformClient();
     const app = await client.getApp(appId);
 
@@ -40,9 +57,16 @@ async function main(dbEntitiesFile: string, appId: string) {
     const domainModelInterface = model.allDomainModels().filter(dm => dm.containerAsModule.name === "MyFirstModule")[0];
     const domainModel = await domainModelInterface.load();
 
+    const module = model.allModules().filter(m => m.name === "MyFirstModule")[0];
+    //const module = model.allFolderBases().filter(b => b.name === "MyFirstModule");
+    //model.allFolderBases()
+
     const dbEntitiesJson: string = fs.readFileSync(dbEntitiesFile, 'utf-8');
+    const restServicesJson: string = fs.readFileSync(restServicesFile, 'utf-8');
 
     createMendixEntities(domainModel, dbEntitiesJson);
+
+    createMendixRestServices(module, restServicesJson);
 
     await commitChanges(model, workingCopy, dbEntitiesFile);
 }
@@ -50,7 +74,9 @@ async function main(dbEntitiesFile: string, appId: string) {
 function createMendixEntities(domainModel: domainmodels.DomainModel, entitiesInJson: any) {
     const importedEntities: ImportedEntity[] = JSON.parse(entitiesInJson);
 
-    importedEntities.forEach((importedEntity, i) => {
+    const entitiesToCreate = importedEntities.filter(e => !entityAlreadyExists(e, domainModel));
+
+    entitiesToCreate.forEach((importedEntity, i) => {
         console.info(`Hello from ${importedEntity.name}`);
 
         const mendixEntity = domainmodels.Entity.createIn(domainModel);
@@ -60,7 +86,7 @@ function createMendixEntities(domainModel: domainmodels.DomainModel, entitiesInJ
         processAttributes(importedEntity, mendixEntity);
     });
 
-    importedEntities.forEach(importedEntity => {
+    entitiesToCreate.forEach(importedEntity => {
         const mendixParentEntity = domainModel.entities.find(e => e.name === importedEntity.name) as domainmodels.Entity;
         processAssociations(importedEntity, domainModel, mendixParentEntity);
     });
@@ -88,6 +114,10 @@ function processAttributes(importedEntity: ImportedEntity, mendixEntity: domainm
         mendixAttribute.name = capitalize(getAttributeName(a.name, importedEntity));
         mendixAttribute.type = assignAttributeType(a.type, mendixAttribute);
     });
+}
+
+function entityAlreadyExists(importedEntity: ImportedEntity, domainModel: domainmodels.DomainModel) {
+    return domainModel.entities.find(e => e.name === importedEntity.name);
 }
 
 function getAttributeName(importedAttributeName: string, mendixEntity: ImportedEntity): string {
@@ -119,9 +149,53 @@ function assignAttributeType(type: ImportedAttributeType, attribute: domainmodel
     }
 }
 
+function createMendixRestServices(module: projects.IModule, restServicesJson: string) {
+    const importedServices: ImportedRestService[] = JSON.parse(restServicesJson);
+
+    importedServices.forEach(importedService => {
+        console.info(`Hello from ${importedService.serviceName}`);
+
+        const restService = rest.PublishedRestService.createIn(module);
+        restService.serviceName = importedService.serviceName;
+        restService.path = importedService.path;
+        restService.version = importedService.version;
+        restService.name = importedService.serviceName;
+
+        // importedService.resources.forEach(importedResource => {
+        //     const publishedRestResource = rest.PublishedRestServiceResource.createIn(restService);
+
+        //     importedResource.operations.forEach(op => {
+        //         const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
+        //         publishedRestOperation.path = op.path;
+        //         publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+        //     });
+        // });
+    });
+}
+
+
+function getMendixHttpMethod(importedOperationMethod: string): services.HttpMethod {
+    switch (importedOperationMethod) {
+        case "GET":
+            return services.HttpMethod.Get;
+        case "POST":
+            return services.HttpMethod.Post;
+        case "PUT":
+            return services.HttpMethod.Put;
+        case "DELETE":
+            return services.HttpMethod.Delete;
+        default:
+            throw new Error(`imported http method ${importedOperationMethod} did not have a valid method in mendix defined`);
+    }
+}
+
 function capitalize(word: string): string {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 
-main(process.argv[2], process.argv[3]).catch(console.error);
+main(process.argv[2], process.argv[3], process.argv[4]).catch(console.error);
+
+
+
+
