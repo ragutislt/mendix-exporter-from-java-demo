@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.exc.StreamWriteException;
@@ -117,12 +118,20 @@ public class MendixExporter {
             }
 
             MendixPublishedRestServiceResource newResource = new MendixPublishedRestServiceResource(
-                    restControllerClass.getSimpleName(), mendixOperations);
+                    retrieveControllerPath(restControllerClass), mendixOperations);
             mendixResources.add(newResource);
         }
 
         mendixRestServices.add(new MendixPublishedRestService("JavaToMendixApplication", "api", "1", mendixResources));
         writeToJsonFile(filePath, mendixRestServices);
+    }
+
+    private static String retrieveControllerPath(Class<?> controllerClass) {
+        RequestMapping[] requestMapping = controllerClass.getAnnotationsByType(RequestMapping.class);
+        String pathValue = requestMapping[0].path()[0];
+        if(pathValue.startsWith("/"))
+            pathValue = pathValue.replaceFirst("/", "");
+        return pathValue;
     }
 
     private static Optional<MendixPublishedRestServiceOperation> findRestOperation(Annotation[] annotations) {
@@ -131,19 +140,18 @@ public class MendixExporter {
                 .findFirst()
                 .map(a -> {
                     String path = getAnnotationPathValue(a);
-
                     RestOperation op = MendixPublishedRestServiceOperation.getMendixRestOperation(a.annotationType());
                     return new MendixPublishedRestServiceOperation(path, op);
                 });
     }
 
     private static String getAnnotationPathValue(Annotation a) {
-        List<String> valueField;
+        List<String> pathValue;
         String path = "";
         try {
-            valueField = Arrays.asList((String[]) a.annotationType().getMethod("value").invoke(a));
-            if (!valueField.isEmpty())
-                path = valueField.get(0);
+            pathValue = Arrays.asList((String[]) a.annotationType().getMethod("path").invoke(a));
+            if (!pathValue.isEmpty())
+                path = pathValue.get(0);
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse mapping annotations");
         }

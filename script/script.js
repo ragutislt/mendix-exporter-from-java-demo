@@ -59,8 +59,6 @@ async function main(dbEntitiesFile, restServicesFile, appId) {
     const domainModelInterface = model.allDomainModels().filter(dm => dm.containerAsModule.name === "MyFirstModule")[0];
     const domainModel = await domainModelInterface.load();
     const module = model.allModules().filter(m => m.name === "MyFirstModule")[0];
-    //const module = model.allFolderBases().filter(b => b.name === "MyFirstModule");
-    //model.allFolderBases()
     const dbEntitiesJson = fs.readFileSync(dbEntitiesFile, 'utf-8');
     const restServicesJson = fs.readFileSync(restServicesFile, 'utf-8');
     createMendixEntities(domainModel, dbEntitiesJson);
@@ -141,14 +139,15 @@ function createMendixRestServices(module, restServicesJson) {
         restService.path = importedService.path;
         restService.version = importedService.version;
         restService.name = importedService.serviceName;
-        // importedService.resources.forEach(importedResource => {
-        //     const publishedRestResource = rest.PublishedRestServiceResource.createIn(restService);
-        //     importedResource.operations.forEach(op => {
-        //         const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
-        //         publishedRestOperation.path = op.path;
-        //         publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
-        //     });
-        // });
+        importedService.resources.forEach(importedResource => {
+            const publishedRestResource = mendixmodelsdk_1.rest.PublishedRestServiceResource.createIn(restService);
+            publishedRestResource.name = importedResource.name;
+            importedResource.operations.forEach(op => {
+                const publishedRestOperation = mendixmodelsdk_1.rest.PublishedRestServiceOperation.createIn(publishedRestResource);
+                publishedRestOperation.path = op.path;
+                publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+            });
+        });
     });
 }
 function getMendixHttpMethod(importedOperationMethod) {

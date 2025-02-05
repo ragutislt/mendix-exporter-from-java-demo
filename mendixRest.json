@@ -3,9 +3,9 @@
   "path" : "api",
   "version" : "1",
   "resources" : [ {
-    "name" : "CatController",
+    "name" : "cat",
     "operations" : [ {
-      "path" : "/cat",
+      "path" : "",
       "restOperation" : "GET"
     } ]
   } ]

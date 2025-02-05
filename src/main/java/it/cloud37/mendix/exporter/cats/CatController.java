@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(consumes = "application/json", produces = "application/json")
+@RequestMapping(path = "/cat", consumes = "application/json", produces = "application/json")
 public class CatController {
 
 	private final CatService catService;
@@ -16,7 +16,7 @@ public class CatController {
 		this.catService = catService;
 	}
 
-	@GetMapping("/cat")
+	@GetMapping
 	public List<CatDto> allCats() {
 		return catService.getCats();
 	}

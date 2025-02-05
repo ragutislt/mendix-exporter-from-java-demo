@@ -58,8 +58,6 @@ async function main(dbEntitiesFile: string, restServicesFile: string, appId: str
     const domainModel = await domainModelInterface.load();
 
     const module = model.allModules().filter(m => m.name === "MyFirstModule")[0];
-    //const module = model.allFolderBases().filter(b => b.name === "MyFirstModule");
-    //model.allFolderBases()
 
     const dbEntitiesJson: string = fs.readFileSync(dbEntitiesFile, 'utf-8');
     const restServicesJson: string = fs.readFileSync(restServicesFile, 'utf-8');
@@ -161,15 +159,16 @@ function createMendixRestServices(module: projects.IModule, restServicesJson: st
         restService.version = importedService.version;
         restService.name = importedService.serviceName;
 
-        // importedService.resources.forEach(importedResource => {
-        //     const publishedRestResource = rest.PublishedRestServiceResource.createIn(restService);
+        importedService.resources.forEach(importedResource => {
+            const publishedRestResource = rest.PublishedRestServiceResource.createIn(restService);
+            publishedRestResource.name = importedResource.name;
 
-        //     importedResource.operations.forEach(op => {
-        //         const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
-        //         publishedRestOperation.path = op.path;
-        //         publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
-        //     });
-        // });
+            importedResource.operations.forEach(op => {
+                const publishedRestOperation = rest.PublishedRestServiceOperation.createIn(publishedRestResource);
+                publishedRestOperation.path = op.path;
+                publishedRestOperation.httpMethod = getMendixHttpMethod(op.restOperation);
+            });
+        });
     });
 }
 
