@@ -1,14 +1,25 @@
 package it.cloud37.mendix.exporter.export;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.data.util.AnnotatedTypeScanner;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.databind.DatabindException;
@@ -18,6 +29,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import it.cloud37.mendix.exporter.JavaToMendixApplication;
 import it.cloud37.mendix.exporter.export.MendixAttribute.AssociationType;
 import it.cloud37.mendix.exporter.export.MendixAttribute.AttributeType;
+import it.cloud37.mendix.exporter.export.MendixPublishedRestServiceOperation.RestOperation;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.extern.slf4j.Slf4j;
@@ -50,12 +62,12 @@ public class MendixExporter {
         writeToJsonFile(filePath, mendixEntities);
     }
 
-    private static void writeToJsonFile(String filePath, List<MendixEntity> mendixEntities)
+    private static void writeToJsonFile(String filePath, Object mendixObjects)
             throws IOException, StreamWriteException, DatabindException {
         ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         Path path = Path.of(filePath);
         Files.deleteIfExists(path);
-        mapper.writeValue(Files.createFile(path).toFile(), mendixEntities);
+        mapper.writeValue(Files.createFile(path).toFile(), mendixObjects);
     }
 
     private static String determineAssociationEntityType(Field field, AttributeType attributeType) {
@@ -82,5 +94,59 @@ public class MendixExporter {
             attributeType = AttributeType.AUTO_NUMBER;
         }
         return attributeType;
+    }
+
+    public static void exportRESTLayerTo(String filePath) throws IOException {
+        AnnotatedTypeScanner typeScanner = new AnnotatedTypeScanner(false, RestController.class);
+
+        Set<Class<?>> restControllerClasses = typeScanner.findTypes(JavaToMendixApplication.class.getPackageName());
+        log.info("Controller classes are: {}", restControllerClasses);
+
+        List<MendixPublishedRestService> mendixRestServices = new ArrayList<>();
+        List<MendixPublishedRestServiceResource> mendixResources = new ArrayList<>();
+
+        for (Class<?> restControllerClass : restControllerClasses) {
+            List<MendixPublishedRestServiceOperation> mendixOperations = new ArrayList<>();
+            for (Method method : restControllerClass.getDeclaredMethods()) {
+                if (!Modifier.isPublic(method.getModifiers())) {
+                    continue;
+                }
+                Optional<MendixPublishedRestServiceOperation> restOperation = findRestOperation(
+                        method.getAnnotations());
+                restOperation.ifPresent(op -> mendixOperations.add(op));
+            }
+
+            MendixPublishedRestServiceResource newResource = new MendixPublishedRestServiceResource(
+                    restControllerClass.getSimpleName(), mendixOperations);
+            mendixResources.add(newResource);
+        }
+
+        mendixRestServices.add(new MendixPublishedRestService("JavaToMendixApplication", "api", "1", mendixResources));
+        writeToJsonFile(filePath, mendixRestServices);
+    }
+
+    private static Optional<MendixPublishedRestServiceOperation> findRestOperation(Annotation[] annotations) {
+        return Arrays.stream(annotations)
+                .filter(a -> MendixPublishedRestServiceOperation.getMendixRestOperation(a.annotationType()) != null)
+                .findFirst()
+                .map(a -> {
+                    String path = getAnnotationPathValue(a);
+
+                    RestOperation op = MendixPublishedRestServiceOperation.getMendixRestOperation(a.annotationType());
+                    return new MendixPublishedRestServiceOperation(path, op);
+                });
+    }
+
+    private static String getAnnotationPathValue(Annotation a) {
+        List<String> valueField;
+        String path = "";
+        try {
+            valueField = Arrays.asList((String[]) a.annotationType().getMethod("value").invoke(a));
+            if (!valueField.isEmpty())
+                path = valueField.get(0);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse mapping annotations");
+        }
+        return path;
     }
 }

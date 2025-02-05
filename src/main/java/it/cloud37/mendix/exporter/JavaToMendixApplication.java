@@ -14,6 +14,8 @@ public class JavaToMendixApplication {
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(JavaToMendixApplication.class, args);
 
+		// todo present several options on which parts to export at a time
 		MendixExporter.exportEntitiesTo(args[0]);
+		MendixExporter.exportRESTLayerTo(args[1]);
 	}
 }

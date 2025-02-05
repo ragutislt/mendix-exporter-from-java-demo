@@ -2,7 +2,7 @@ package it.cloud37.mendix.exporter.export;
 
 import java.util.Map;
 
-public record MendixAttribute(
+record MendixAttribute(
         String name,
         AttributeType type,
         AssociationType associationType,
